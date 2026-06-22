@@ -323,7 +323,7 @@ canvas#stage{display:block;}
     var table = document.getElementById(TABLE_ID);
     if (!table) return false;
     try {
-      var html = '&lt;!doctype html&gt;\n&lt;meta charset="utf-8"&gt;\n' + table.outerHTML + "\n";
+      var html = table.outerHTML;
       var blob = new Blob([html], { type: "text/html" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
