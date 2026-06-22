@@ -66,6 +66,36 @@ h1{font-size:21px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em;}
 .copybtn:hover{background:var(--btn-hover);}
 .copybtn.ok{border-color:var(--accent);color:var(--accent);}
 .note{font-size:12px;color:var(--faint);margin:14px 2px 0;}
+.bpick{display:flex;flex-direction:column;gap:6px;max-width:320px;margin:0 0 4px;}
+.bpick label{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding-left:2px;}
+#guide[hidden]{display:none;}
+#guide{margin-top:22px;}
+.ghead{font-size:15px;font-weight:600;margin:0 0 14px;}
+.bstep{display:flex;gap:12px;margin:0 0 16px;align-items:flex-start;}
+.bnum{flex:0 0 26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px color-mix(in srgb,var(--accent) 45%,transparent);}
+.bbody{flex:1;min-width:0;}
+.blabel{font-size:13px;font-weight:600;margin-bottom:8px;}
+.krow{display:flex;align-items:center;gap:10px;margin-bottom:7px;flex-wrap:wrap;}
+.plat{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;min-width:84px;}
+.keys{display:inline-flex;align-items:center;gap:6px;}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:28px;padding:0 9px;border-radius:7px;border:1px solid var(--btn-border);border-bottom-width:2px;background:var(--btn-bg);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;font-weight:600;}
+.plus{color:var(--faint);font-size:12px;}
+.ksub{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.45;}
+.crumbs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.crumb{display:inline-flex;align-items:center;background:var(--chip-bg);border:1px solid var(--chip-border);color:var(--chip-ink);border-radius:7px;padding:5px 10px;font-size:12px;font-weight:500;}
+.carrow{color:var(--faint);font-size:13px;}
+.callout{border-radius:10px;padding:12px 14px;margin:6px 0 18px;border:1px solid var(--line);background:var(--metric-bg);}
+.callout.warn{background:var(--err-bg);border-color:var(--err-border);}
+.callout .ct{font-size:13px;font-weight:600;margin-bottom:4px;color:var(--ink);}
+.callout.warn .ct{color:var(--err-ink);}
+.callout .cb{font-size:13px;color:var(--muted);line-height:1.5;}
+.cmock{margin-top:11px;border-radius:8px;background:#171716;border:1px solid #2b2a27;padding:11px 13px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;}
+.cmline{color:#d6d3c8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmwarn{color:#e6b07a;}
+.cmprompt{color:#6fae8e;}
+.cmtype{color:#9fd2ff;}
+.cmcaret{display:inline-block;width:7px;height:14px;background:#9fd2ff;margin-left:3px;vertical-align:-2px;animation:cmBlink 1s steps(1) infinite;}
+@keyframes cmBlink{50%{opacity:0;}}
 .loader{border:1.5px dashed var(--loader-border);background:var(--loader-bg);border-radius:12px;padding:22px;text-align:center;margin:0 0 20px;transition:border-color .12s,background .12s;}
 .loader.drag{border-color:var(--accent);background:var(--drag-bg);}
 .loader p{margin:0 0 10px;color:var(--muted);font-size:14px;}
@@ -135,8 +165,8 @@ canvas#stage{display:block;}
   <div class="brand">Defly Stats Viewer <span class="by">by <span class="who">progood</span></span></div>
   <div class="topbar">
     <div class="tabs" role="tablist" aria-label="View">
-      <button class="tab" id="tab-how" role="tab" aria-selected="false">How to import</button>
-      <button class="tab" id="tab-stats" role="tab" aria-selected="true">Stats</button>
+      <button class="tab" id="tab-how" role="tab" aria-selected="true">How to import</button>
+      <button class="tab" id="tab-stats" role="tab" aria-selected="false">Stats</button>
     </div>
     <div class="actions">
       <div class="swatches" id="swatches"></div>
@@ -144,20 +174,36 @@ canvas#stage{display:block;}
     </div>
   </div>
 
-  <section class="panel" id="panel-how" role="tabpanel" aria-labelledby="tab-how">
+  <section class="panel active" id="panel-how" role="tabpanel" aria-labelledby="tab-how">
     <h1>How to import your stats</h1>
-    <p class="sub">Run a short script on defly.io to export your statistics, then drag the downloaded file anywhere on this page.</p>
-    <ol class="steps">
-      <li>On <b>defly.io</b>, open the browser console — press <b>F12</b> (or right-click → Inspect) and pick the <b>Console</b> tab.</li>
-      <li>Copy the code below, paste it into the console, and press <b>Enter</b>.</li>
-      <li>The code will open your stats and it will download the file automatically.</li>
-      <li>Drag that file onto this page — it jumps straight to the chart.</li>
-    </ol>
+    <p class="sub">Pick your browser below, run a short script on defly.io to export your statistics, then drag the downloaded file anywhere on this page.</p>
+    <div class="bpick">
+      <label for="browserSel">Choose your browser</label>
+      <select id="browserSel">
+        <option value="">Select your browser…</option>
+        <option value="firefox">Firefox</option>
+        <option value="chrome">Chrome</option>
+        <option value="edge">Edge</option>
+        <option value="safari">Safari</option>
+        <option value="opera">Opera</option>
+        <option value="brave">Brave</option>
+      </select>
+    </div>
+    <div id="guide" hidden>
+      <div id="browserSteps"></div>
+      <h3 class="ghead">Then run the script</h3>
+      <ol class="steps">
+        <li>Copy the code below with the <b>Copy</b> button.</li>
+        <li>Click into the console, paste, and press <b>Enter</b>.</li>
+        <li>The code opens your stats and downloads the file automatically.</li>
+        <li>Drag that file onto this page — it jumps straight to the chart.</li>
+      </ol>
     <div class="codewrap">
       <button class="copybtn" id="copyBtn"><span id="copyGlyph">⧉</span><span id="copyLabel">Copy</span></button>
       <pre id="codeView"></pre>
     </div>
     <p class="note">Everything runs locally in your browser — nothing is uploaded.</p>
+    </div>
     <pre id="console-code-src" style="display:none">(function () {
   "use strict";
 
@@ -350,7 +396,7 @@ canvas#stage{display:block;}
 })();</pre>
   </section>
 
-  <section class="panel active" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats">
+  <section class="panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats">
     <div class="loader" id="loader">
       <p>Drop your <b>defly-stats.html</b> here, or pick it below. Loading more files adds their sessions (duplicates are ignored).</p>
       <div class="row">
@@ -461,10 +507,10 @@ var accent=PRESETS[0][1],swWrap=$("swatches");
 PRESETS.forEach(function(p,i){var b=document.createElement("button");b.className="swatch";b.style.background=p[1];b.title=p[0];b.setAttribute("aria-pressed",i===0?"true":"false");b.addEventListener("click",function(){setAccent(p[1],b);});swWrap.appendChild(b);});
 var custom=document.createElement("label");custom.className="swatch custom";custom.title="Custom colour";custom.textContent="+";
 var colorInput=document.createElement("input");colorInput.type="color";colorInput.value=accent;colorInput.addEventListener("input",function(){setAccent(colorInput.value,custom);});custom.appendChild(colorInput);swWrap.appendChild(custom);
-function setAccent(hex,el){accent=hex;document.documentElement.style.setProperty("--accent",hex);Array.prototype.forEach.call(swWrap.querySelectorAll(".swatch"),function(s){s.setAttribute("aria-pressed","false");});if(el)el.setAttribute("aria-pressed","true");render();}
+function setAccent(hex,el){accent=hex;document.documentElement.style.setProperty("--accent",hex);Array.prototype.forEach.call(swWrap.querySelectorAll(".swatch"),function(s){s.setAttribute("aria-pressed","false");});if(el)el.setAttribute("aria-pressed","true");render();saveState();}
 
 var tabHow=$("tab-how"),tabStats=$("tab-stats"),panelHow=$("panel-how"),panelStats=$("panel-stats");
-function selectTab(w){var how=w==="how";tabHow.setAttribute("aria-selected",how?"true":"false");tabStats.setAttribute("aria-selected",how?"false":"true");panelHow.classList.toggle("active",how);panelStats.classList.toggle("active",!how);if(!how)render();}
+function selectTab(w){var how=w==="how";tabHow.setAttribute("aria-selected",how?"true":"false");tabStats.setAttribute("aria-selected",how?"false":"true");panelHow.classList.toggle("active",how);panelStats.classList.toggle("active",!how);if(!how)render();saveState();}
 tabHow.addEventListener("click",function(){selectTab("how");});
 tabStats.addEventListener("click",function(){selectTab("stats");});
 
@@ -525,7 +571,7 @@ function parseHTML(str){
 
 var sources=[],flags={kills:false,score:false,reason:false},range=null;
 function addSource(name,rows){if(!rows.length){flash(name+": no valid stats table found.");return;}sources.push({name:name,rows:rows});rows.forEach(function(r){if(r.hasK)flags.kills=true;if(r.hasScore)flags.score=true;if(r.hasReason)flags.reason=true;});recompute();}
-function recompute(){if(!sources.length){flags={kills:false,score:false,reason:false};}renderChips();updateUI();scroll.scrollLeft=0;render();}
+function recompute(){if(!sources.length){flags={kills:false,score:false,reason:false};}renderChips();updateUI();scroll.scrollLeft=0;render();saveState();}
 function allRows(){var seen=Object.create(null),out=[];sources.forEach(function(s){s.rows.forEach(function(r){if(seen[r.key])return;seen[r.key]=1;out.push(r);});});return out;}
 function inRange(d){if(!range)return true;if(!d)return false;return d>=range.from&&d<=range.to;}
 function bucketKey(r,g){if(!r.date)return g==="year"?"Unknown":null;if(g==="year")return r.date.slice(0,4);if(g==="month")return r.date.slice(0,7);return r.date;}
@@ -729,8 +775,45 @@ downloadBtn.addEventListener("click",function(){
   off.toBlob(function(blob){var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="defly-"+_last.metric+"-by-"+_last.group+(isDark()?"-dark":"")+".png";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);},"image/png");
 });
 
+var browserSel=$("browserSel"),guideEl=$("guide"),bstepsEl=$("browserSteps");
+var BROWSERS={
+firefox:{name:"Firefox",win:["Ctrl","Shift","K"],mac:["\u2318","\u2325","K"],menu:["\u2630 Menu","More tools","Web Developer Tools","Console"],warn:{t:"If pasting is blocked",b:"Firefox blocks the first paste into the console for safety. Type <b>allow pasting</b> and press Enter, then paste the code again."}},
+chrome:{name:"Chrome",win:["Ctrl","Shift","J"],mac:["\u2318","\u2325","J"],menu:["\u22ee Menu","More tools","Developer tools","Console"],warn:{t:"If you see a \u201cDon\u2019t paste code\u201d warning",b:"Chrome blocks the first paste for safety. Type <b>allow pasting</b> in the console and press Enter, then paste the code again."}},
+edge:{name:"Edge",win:["Ctrl","Shift","J"],mac:["\u2318","\u2325","J"],menu:["\u22ef Menu","More tools","Developer tools","Console"],warn:{t:"If pasting is blocked",b:"Edge asks you to confirm the first paste. Type <b>allow pasting</b> and press Enter, then paste again."}},
+safari:{name:"Safari",win:null,mac:["\u2325","\u2318","C"],menu:["Develop","Show JavaScript Console"],pre:{t:"First, turn on the Develop menu (one-time)",b:"Open <b>Safari \u2192 Settings \u2192 Advanced</b> and tick <b>\u201cShow features for web developers\u201d</b> (older versions: \u201cShow Develop menu in menu bar\u201d). The <b>Develop</b> menu then appears in the menu bar."},warn:null},
+opera:{name:"Opera",win:["Ctrl","Shift","J"],mac:["\u2318","\u2325","J"],menu:["\u2630 Menu","Developer","Developer tools","Console"],warn:{t:"If pasting is blocked",b:"Type <b>allow pasting</b> and press Enter, then paste the code again."}},
+brave:{name:"Brave",win:["Ctrl","Shift","J"],mac:["\u2318","\u2325","J"],menu:["\u2630 Menu","More tools","Developer tools","Console"],warn:{t:"If you see a \u201cDon\u2019t paste code\u201d warning",b:"Brave blocks the first paste for safety. Type <b>allow pasting</b> and press Enter, then paste the code again."}}
+};
+function keys(a){return "<span class='keys'>"+a.map(function(k,i){return (i?"<span class='plus'>+</span>":"")+"<span class='kbd'>"+k+"</span>";}).join("")+"</span>";}
+function crumbs(a){return "<div class='crumbs'>"+a.map(function(c,i){return (i?"<span class='carrow'>\u2192</span>":"")+"<span class='crumb'>"+c+"</span>";}).join("")+"</div>";}
+function calloutMock(t,b){return "<div class='callout warn'><div class='ct'>\u26a0 "+t+"</div><div class='cb'>"+b+"</div><div class='cmock'><div class='cmline cmwarn'>Warning: Don\u2019t paste code you don\u2019t understand here.</div><div class='cmline'><span class='cmprompt'>&gt;</span> <span class='cmtype'>allow pasting</span><span class='cmcaret'></span></div></div></div>";}
+function renderBrowser(id){
+  var b=BROWSERS[id];if(!bstepsEl)return;if(!b){bstepsEl.innerHTML="";return;}
+  var h="<h3 class='ghead'>Open the console in "+b.name+"</h3>";
+  if(b.pre)h+="<div class='callout'><div class='ct'>"+b.pre.t+"</div><div class='cb'>"+b.pre.b+"</div></div>";
+  h+="<div class='bstep'><div class='bnum'>1</div><div class='bbody'><div class='blabel'>Fastest \u2014 keyboard shortcut</div>";
+  if(b.win)h+="<div class='krow'><span class='plat'>Windows / Linux</span>"+keys(b.win)+"</div>";
+  if(b.mac)h+="<div class='krow'><span class='plat'>Mac</span>"+keys(b.mac)+"</div>";
+  h+="<div class='ksub'>Opens straight to the <b>Console</b> tab.</div></div></div>";
+  h+="<div class='bstep'><div class='bnum'>2</div><div class='bbody'><div class='blabel'>Or open it through the menu</div>"+crumbs(b.menu)+"<div class='ksub'>Then click the <b>Console</b> tab if it isn't already showing.</div></div></div>";
+  if(b.warn)h+=calloutMock(b.warn.t,b.warn.b);
+  bstepsEl.innerHTML=h;
+}
+if(browserSel){browserSel.addEventListener("change",function(){renderBrowser(browserSel.value);if(guideEl)guideEl.hidden=!browserSel.value;saveState();});}
+
+function applyAccent(hex){var i=-1;for(var k=0;k<PRESETS.length;k++){if(PRESETS[k][1].toLowerCase()===hex.toLowerCase()){i=k;break;}}var sw=swWrap.querySelectorAll(".swatch"),el=i>=0?sw[i]:custom;if(i<0)colorInput.value=hex;setAccent(hex,el);}
+function saveState(){var tab=panelHow.classList.contains("active")?"how":"stats";var st={accent:accent,tab:tab,browser:browserSel?browserSel.value:"",files:sources.map(function(s){return {name:s.name,rows:s.rows};})};try{localStorage.setItem("deflyState",JSON.stringify(st));}catch(e){}try{history.replaceState(null,"","?tab="+tab+"&c="+accent.replace("#",""));}catch(e){}}
+function restoreState(){
+  var q=null;try{q=new URLSearchParams(location.search);}catch(e){}
+  var st={};try{st=JSON.parse(localStorage.getItem("deflyState")||"{}")||{};}catch(e){}
+  var qa=q&&q.get("c"),ahex=qa?("#"+qa.replace(/[^0-9a-fA-F]/g,"")):(st.accent||null);
+  if(ahex&&/^#[0-9a-fA-F]{6}$/.test(ahex))applyAccent(ahex);
+  if(st.files&&st.files.length){st.files.forEach(function(f){if(f&&f.rows){sources.push({name:f.name,rows:f.rows});f.rows.forEach(function(r){if(r.hasK)flags.kills=true;if(r.hasScore)flags.score=true;if(r.hasReason)flags.reason=true;});}});renderChips();}
+  if(st.browser&&BROWSERS[st.browser]&&browserSel){browserSel.value=st.browser;renderBrowser(st.browser);if(guideEl)guideEl.hidden=false;}
+  var tab=(q&&q.get("tab"))||st.tab||"how";selectTab(tab==="stats"?"stats":"how");
+}
 window.addEventListener("resize",function(){render();});
-updateUI();render();
+updateUI();restoreState();render();
 })();
 </script>
 </body>
