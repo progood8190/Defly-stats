@@ -528,6 +528,7 @@ var durRe=/(\d+)\s*h\s*(\d+)\s*m\s*(\d+)\s*s/i;
 var reasonRe=/wall|bullet|disconnect/i;
 var deathRe=/wall|bullet/i;
 function num(s){var m=String(s).replace(/[, ]/g,"").match(/-?\d+(\.\d+)?/);return m?parseFloat(m[0]):0;}
+function normDate(s){if(!s)return null;var m=String(s).match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+"-"+m[2]+"-"+m[3];m=String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return m[3]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[1]).slice(-2);return null;}
 function headerMap(table){
   var map={},h=table.querySelectorAll("thead th, thead td");
   if(!h.length){var fr=table.querySelector("tr");if(fr&&fr.querySelectorAll("th").length)h=fr.querySelectorAll("th");}
@@ -554,9 +555,8 @@ function parseHTML(str){
     if(!dm){for(var i=0;i<tds.length;i++){var mm=durRe.exec(tds[i].textContent);if(mm){dm=mm;durRaw=tds[i].textContent;break;}}}
     if(!dm)return;
     var sec=(+dm[1])*3600+(+dm[2])*60+(+dm[3]);
-    var dRaw=hmap.date!=null?cell(hmap.date):"",ds=dRaw.match(/\d{4}-\d{2}-\d{2}/);
-    if(!ds){for(var j=0;j<tds.length;j++){var d2=tds[j].textContent.match(/\d{4}-\d{2}-\d{2}/);if(d2){ds=d2;break;}}}
-    var date=ds?ds[0]:null;
+    var dRaw=hmap.date!=null?cell(hmap.date):"",date=normDate(dRaw);
+    if(!date){for(var j=0;j<tds.length;j++){var d2=normDate(tds[j].textContent);if(d2){date=d2;break;}}}
     var reason=hmap.reason!=null?cell(hmap.reason):"";
     if(!reason){for(var r=0;r<tds.length;r++){if(reasonRe.test(tds[r].textContent)){reason=tds[r].textContent.trim();break;}}}
     var hasReason=hmap.reason!=null||reasonRe.test(reason);
