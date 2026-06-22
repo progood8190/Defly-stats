@@ -658,7 +658,8 @@ function render(){
   var nd=noDataMsg(metric);
   if(!nd&&!buckets.length)nd=g==="day"?"No sessions in the selected range.":"No dated sessions to display.";
   var dpr=window.devicePixelRatio||1,H=360,W=nd?Math.max(320,scroll.clientWidth):computeW(buckets.length,g);
-  stage.width=Math.round(W*dpr);stage.height=Math.round(H*dpr);stage.style.width=W+"px";stage.style.height=H+"px";ctx.setTransform(dpr,0,0,dpr,0,0);
+  var MAXB=32000,sc=Math.min(dpr,MAXB/Math.max(W,1),MAXB/H);if(!(sc>0))sc=1;
+  stage.width=Math.round(W*sc);stage.height=Math.round(H*sc);stage.style.width=W+"px";stage.style.height=H+"px";ctx.setTransform(sc,0,0,sc,0,0);
   yax.width=Math.round(50*dpr);yax.height=Math.round(H*dpr);yax.style.width="50px";yax.style.height=H+"px";yctx.setTransform(dpr,0,0,dpr,0,0);
   if(nd){ctx.clearRect(0,0,W,H);yctx.clearRect(0,0,50,H);var T=tcol();ctx.fillStyle=T.empty;ctx.font="500 14px -apple-system,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(nd,W/2,H/2);ctx.textAlign="left";cardsEl.innerHTML="";rSub.textContent="—";jumpCtrl.style.display="none";_last={buckets:[],metric:metric,group:g};updateDownload();setJumpLabel();return;}
   jumpCtrl.style.display=g==="day"?"flex":"none";
@@ -765,8 +766,8 @@ $("calApply").addEventListener("click",function(){if(tFrom&&tTo){var lo=tFrom<tT
 
 downloadBtn.addEventListener("click",function(){
   if(!_last||!_last.buckets.length)return;
-  var g=_last.group,W=parseFloat(stage.style.width),H=parseFloat(stage.style.height),axisW=50,fullW=W+axisW,scale=g==="year"?2:3,maxDim=16000;
-  if(fullW*scale>maxDim)scale=Math.max(1,maxDim/fullW);if(H*scale>maxDim)scale=Math.min(scale,maxDim/H);
+  var g=_last.group,W=parseFloat(stage.style.width),H=parseFloat(stage.style.height),axisW=50,fullW=W+axisW,maxDim=32000;
+  var scale=Math.min(g==="year"?2:3,maxDim/fullW,maxDim/H);if(!(scale>0))scale=1;
   var off=document.createElement("canvas");off.width=Math.round(fullW*scale);off.height=Math.round(H*scale);
   var oc=off.getContext("2d");oc.setTransform(scale,0,0,scale,0,0);
   oc.fillStyle=tcol().bg;oc.fillRect(0,0,fullW,H);
