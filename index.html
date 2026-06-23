@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google-site-verification" content="nmQUNtm21RM-Yf_6ieG_1MDdDy4TcALBCZAZjUCj4Uo" />
 <title>Defly Stats Visualizer</title>
 <style>
 * { box-sizing: border-box; }
@@ -106,6 +107,15 @@ textarea{width:100%;min-height:96px;margin-top:12px;border:1px solid var(--field
 .chip button{border:none;background:var(--chip-btn-bg);color:var(--chip-ink);width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;}
 .chip button:hover{background:var(--chip-btn-hover);}
 .chip.error{background:var(--err-bg);border-color:var(--err-border);color:var(--err-ink);}
+.datenotice{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.datenotice:empty{display:none;}
+.dn-item{display:flex;align-items:center;flex-wrap:wrap;gap:10px;justify-content:center;text-align:left;background:var(--drag-bg);border:1px solid var(--btn-border);border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.4;}
+.dn-item .dn-msg{color:var(--muted);}
+.dn-item .dn-msg b{color:var(--ink);}
+.dn-seg{display:inline-flex;border:1px solid var(--btn-border);border-radius:7px;overflow:hidden;flex:none;}
+.dn-seg button{border:none;border-left:1px solid var(--btn-border);background:var(--btn-bg);color:var(--muted);padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:.02em;cursor:pointer;}
+.dn-seg button:first-child{border-left:none;}
+.dn-seg button.on{background:var(--accent);color:#fff;}
 .controls{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:0 0 16px;}
 .ctrl{display:flex;flex-direction:column;gap:4px;}
 .ctrl label{font-size:11px;color:var(--faint);padding-left:2px;text-transform:uppercase;letter-spacing:.04em;}
@@ -408,6 +418,7 @@ canvas#stage{display:block;position:absolute;left:0;top:0;}
       <input type="file" id="fileInput" multiple hidden>
       <textarea id="pasteArea" placeholder="Paste the contents of your stats HTML here, then click outside the box…"></textarea>
       <div class="files" id="files"></div>
+      <div class="datenotice" id="dateNotice"></div>
     </div>
 
     <div class="controls" id="controls" style="display:none">
@@ -529,7 +540,7 @@ var durRe=/(\d+)\s*h\s*(\d+)\s*m\s*(\d+)\s*s/i;
 var reasonRe=/wall|bullet|disconnect/i;
 var deathRe=/wall|bullet/i;
 function num(s){var m=String(s).replace(/[, ]/g,"").match(/-?\d+(\.\d+)?/);return m?parseFloat(m[0]):0;}
-function detectDateFmt(table){var t=(table.textContent||""),m=t.match(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g)||[],dmy=0,mdy=0;for(var i=0;i<m.length;i++){var p=m[i].split("/"),a=+p[0],b=+p[1];if(a>12&&b<=12)dmy++;else if(b>12&&a<=12)mdy++;}return mdy>dmy?"mdy":"dmy";}
+function detectDateFmt(table){var t=(table.textContent||""),m=t.match(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g)||[],dmy=0,mdy=0;for(var i=0;i<m.length;i++){var p=m[i].split("/"),a=+p[0],b=+p[1];if(a>12&&b<=12)dmy++;else if(b>12&&a<=12)mdy++;}if(dmy>0||mdy>0)return {fmt:mdy>dmy?"mdy":"dmy",ambiguous:false};return {fmt:"dmy",ambiguous:m.length>0};}
 function normDate(s,fmt){if(!s)return null;var m=String(s).match(/(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[3]).slice(-2);m=String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(!m)return null;var a=+m[1],b=+m[2],y=m[3],day,mon;if(fmt==="mdy"){mon=a;day=b;}else{day=a;mon=b;}if(mon>12&&day<=12){var z=mon;mon=day;day=z;}return y+"-"+("0"+mon).slice(-2)+"-"+("0"+day).slice(-2);}
 function headerMap(table){
   var map={},h=table.querySelectorAll("thead th, thead td");
@@ -546,8 +557,8 @@ function headerMap(table){
 function parseHTML(str){
   var doc=new DOMParser().parseFromString(str,"text/html");
   var table=doc.querySelector("#my-statistics-table")||doc.querySelector("table");
-  if(!table)return [];
-  var hmap=headerMap(table),dfmt=detectDateFmt(table),rows=table.querySelectorAll("tbody tr");
+  if(!table)return {rows:[],fmt:"dmy",ambiguous:false};
+  var hmap=headerMap(table),det=detectDateFmt(table),dfmt=det.fmt,rows=table.querySelectorAll("tbody tr");
   if(!rows.length)rows=table.querySelectorAll("tr");
   var out=[];
   rows.forEach(function(tr){
@@ -568,12 +579,13 @@ function parseHTML(str){
       death:deathRe.test(reason)?1:0,hasK:hasK,hasScore:hasScore,hasReason:hasReason,
       key:Array.prototype.map.call(tds,function(td){return td.textContent;}).join("\u0001")});
   });
-  return out;
+  return {rows:out,fmt:det.fmt,ambiguous:det.ambiguous};
 }
 
 var sources=[],flags={kills:false,score:false,reason:false},range=null;
-function addSource(name,rows){if(!rows.length){flash(name+": no valid stats table found.");return;}sources.push({name:name,rows:rows});rows.forEach(function(r){if(r.hasK)flags.kills=true;if(r.hasScore)flags.score=true;if(r.hasReason)flags.reason=true;});recompute();}
-var filesJSON="[]";function rebuildFiles(){try{filesJSON=JSON.stringify(sources.map(function(s){return {name:s.name,rows:s.rows};}));}catch(e){filesJSON="[]";}}
+function addSource(name,parsed){var rows=parsed&&parsed.rows?parsed.rows:[];if(!rows.length){flash(name+": no valid stats table found.");return;}sources.push({name:name,rows:rows,fmt:parsed.fmt||"dmy",ambiguous:!!parsed.ambiguous});rows.forEach(function(r){if(r.hasK)flags.kills=true;if(r.hasScore)flags.score=true;if(r.hasReason)flags.reason=true;});recompute();}
+function flipFormat(idx){var s=sources[idx];if(!s||!s.ambiguous)return;s.fmt=(s.fmt==="mdy")?"dmy":"mdy";s.rows.forEach(function(r){if(r.date){var p=r.date.split("-");if(p.length===3)r.date=p[0]+"-"+p[2]+"-"+p[1];}});recompute();}
+var filesJSON="[]";function rebuildFiles(){try{filesJSON=JSON.stringify(sources.map(function(s){return {name:s.name,rows:s.rows,fmt:s.fmt,ambiguous:s.ambiguous};}));}catch(e){filesJSON="[]";}}
 function recompute(){if(!sources.length){flags={kills:false,score:false,reason:false};}rebuildFiles();renderChips();updateUI();scroll.scrollLeft=0;render();saveState();}
 function allRows(){var seen=Object.create(null),out=[];sources.forEach(function(s){s.rows.forEach(function(r){if(seen[r.key])return;seen[r.key]=1;out.push(r);});});return out;}
 function inRange(d){if(!range)return true;if(!d)return false;return d>=range.from&&d<=range.to;}
@@ -705,7 +717,8 @@ function setJumpLabel(){var m=_last?_last.metric:metricSel.value;jumpLabel.textC
 function centerBucket(i){var bar=_bars[i];if(!bar)return;var target=Math.round(bar.x+bar.w/2-scroll.clientWidth/2);target=Math.max(0,Math.min(target,scroll.scrollWidth-scroll.clientWidth));scroll.scrollLeft=target;stage.style.left=scroll.scrollLeft+"px";jumpedScrollLeft=scroll.scrollLeft;jumpedActive=true;}
 jumpBtn.addEventListener("click",function(){if(!_last||!_last.buckets.length||!jumpOrder.length)return;var idx=jumpOrder[jumpPos];centerBucket(idx);_hover=idx;redrawHover();showTip(_bars[idx]);jumpPos=(jumpPos+1)%jumpOrder.length;setJumpLabel();});
 
-function renderChips(){filesEl.innerHTML="";sources.forEach(function(s,idx){var c=document.createElement("span");c.className="chip";c.innerHTML="<span>"+escapeHTML(s.name)+" · "+s.rows.length+"</span>";var b=document.createElement("button");b.textContent="×";b.title="Remove";b.addEventListener("click",function(){sources.splice(idx,1);recompute();});c.appendChild(b);filesEl.appendChild(c);});}
+function renderChips(){filesEl.innerHTML="";sources.forEach(function(s,idx){var c=document.createElement("span");c.className="chip";c.innerHTML="<span>"+escapeHTML(s.name)+" · "+s.rows.length+"</span>";var b=document.createElement("button");b.textContent="×";b.title="Remove";b.addEventListener("click",function(){sources.splice(idx,1);recompute();});c.appendChild(b);filesEl.appendChild(c);});renderDateNotice();}
+function renderDateNotice(){var el=$("dateNotice");if(!el)return;el.innerHTML="";sources.forEach(function(s,idx){if(!s.ambiguous)return;var d=document.createElement("div");d.className="dn-item";var msg=document.createElement("span");msg.className="dn-msg";msg.innerHTML="Couldn\u2019t auto-detect <b>"+escapeHTML(s.name)+"</b>\u2019s date format (no day past the 12th to tell from). Pick the order:";var seg=document.createElement("span");seg.className="dn-seg";var b1=document.createElement("button"),b2=document.createElement("button");b1.textContent="DD/MM";b2.textContent="MM/DD";(s.fmt==="mdy"?b2:b1).className="on";b1.addEventListener("click",function(){if(s.fmt!=="dmy")flipFormat(idx);});b2.addEventListener("click",function(){if(s.fmt!=="mdy")flipFormat(idx);});seg.appendChild(b1);seg.appendChild(b2);d.appendChild(msg);d.appendChild(seg);el.appendChild(d);});}
 function flash(msg){var c=document.createElement("span");c.className="chip error";c.textContent=msg;filesEl.appendChild(c);setTimeout(function(){if(c.parentNode)c.parentNode.removeChild(c);},4500);}
 function readFiles(list){Array.prototype.forEach.call(list,function(f){var r=new FileReader();r.onload=function(){addSource(f.name,parseHTML(String(r.result)));};r.onerror=function(){flash("Could not read "+f.name);};r.readAsText(f);});}
 $("pickBtn").addEventListener("click",function(){fileInput.click();});
@@ -815,7 +828,7 @@ function restoreState(){
   var st={};try{st=JSON.parse(localStorage.getItem("deflyState")||"{}")||{};}catch(e){}
   var qa=q&&q.get("c"),ahex=qa?("#"+qa.replace(/[^0-9a-fA-F]/g,"")):(st.accent||null);
   if(ahex&&/^#[0-9a-fA-F]{6}$/.test(ahex))applyAccent(ahex);
-  if(st.files&&st.files.length){st.files.forEach(function(f){if(f&&f.rows){sources.push({name:f.name,rows:f.rows});f.rows.forEach(function(r){if(r.hasK)flags.kills=true;if(r.hasScore)flags.score=true;if(r.hasReason)flags.reason=true;});}});renderChips();rebuildFiles();}
+  if(st.files&&st.files.length){st.files.forEach(function(f){if(f&&f.rows){sources.push({name:f.name,rows:f.rows,fmt:f.fmt||"dmy",ambiguous:!!f.ambiguous});f.rows.forEach(function(r){if(r.hasK)flags.kills=true;if(r.hasScore)flags.score=true;if(r.hasReason)flags.reason=true;});}});renderChips();rebuildFiles();}
   if(st.browser&&BROWSERS[st.browser]&&browserSel){browserSel.value=st.browser;renderBrowser(st.browser);if(guideEl)guideEl.hidden=false;}
   var tab=(q&&q.get("tab"))||st.tab||"how";selectTab(tab==="stats"?"stats":"how");
 }
